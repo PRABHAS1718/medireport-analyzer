@@ -150,6 +150,18 @@ MediReport Analyzer is an AI-assisted medical report understanding, comparison, 
   * `POST` & `GET /{patient_id}/conditions`: Record & list diagnosed conditions.
   * `POST` & `GET /{patient_id}/medications`: Record & list active medications.
   * `GET /{patient_id}/history`: Unified patient timeline aggregating all labs, symptoms, conditions, medications, and confirmed memory facts.
+* **Viva Questions & Answers:**
+  * **Q1: How does the system prevent cross-user data leakage and horizontal privilege escalation?**
+    * *Answer:* Through the centralized FastAPI dependency `verify_patient_access()` in `app/api/deps.py`. It decodes the JWT token from the `Authorization` header, retrieves the user's `user_id`, queries the `patient_profiles` collection with both `_id=patient_id` AND `owner_user_id=user_id`. If no matching record is found, it immediately raises an `HTTP 404 Not Found` (rather than a 403 Forbidden), completely concealing whether the requested patient ID exists to prevent enumeration attacks.
+  * **Q2: Why do we provide manual entry forms if we already have PDF extraction and natural language memory?**
+    * *Answer:* Robustness and accessibility. Medical reports can have illegible handwriting, degraded scan quality, or unsupported formats. Providing structured manual entry ensures the patient or clinician always has a guaranteed fallback to record vital information regardless of OCR or parsing limitations.
+* **Practical Code Challenge:**
+  * *Question:* "How would you add a new category for `SURGICAL_PROCEDURE` to the system?"
+  * *Answer:* 
+    1. Add `SURGICAL_PROCEDURE = "surgical_procedure"` to `FactType` enum in `schemas/medical_record.py`.
+    2. Add surgery regex patterns (e.g. `r"(?:underwent|had|surgery for)\s+([a-zA-Z\s]+)"`) to `context_extractor.py`.
+    3. Add a dedicated MongoDB collection `surgeries` with an index on `patient_id` in `mongodb.py`.
+    4. Mount `POST` and `GET /{patient_id}/surgeries` in `medical_records.py` and include them in the unified `/history` aggregator.
 
 ---
 

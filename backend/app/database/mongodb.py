@@ -73,6 +73,25 @@ class MongoManager:
                 name="idx_reports_patient_date"
             )
 
+            # Patient context facts collection: patient_id + created_at
+            await self.db.patient_context_facts.create_index(
+                [("patient_id", ASCENDING), ("created_at", ASCENDING)],
+                name="idx_context_facts_patient_date"
+            )
+
+            # Lab results collection: patient_id + collected_at
+            await self.db.lab_results.create_index(
+                [("patient_id", ASCENDING), ("collected_at", ASCENDING)],
+                name="idx_lab_results_patient_date"
+            )
+
+            # Symptoms, conditions, medications: patient_id index
+            for coll_name in ["symptoms", "conditions", "medications"]:
+                await self.db[coll_name].create_index(
+                    [("patient_id", ASCENDING)],
+                    name=f"idx_{coll_name}_patient"
+                )
+
             logger.info("Database indexes successfully initialized.")
         except Exception as exc:
             logger.warning("Failed to create database indexes: %s", exc)
